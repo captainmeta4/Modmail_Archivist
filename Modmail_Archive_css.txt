@@ -1,0 +1,102 @@
+/*Make taglines (fake taglines in the text) small*/
+.link .usertext-body hr + p{
+    font-size: x-small;
+    font-weight: bold;
+}
+
+/* Mod "distinguishes" */
+
+.link .usertext-body a[href$="#mod"] {
+    background-color: green;
+    color: white;
+    border-radius: 2px;
+    padding: 1px;
+}
+
+.link .usertext-body a[href$="#mod"]::after {
+    content:" [M]"
+}
+
+/* Admin "distinguishes" */
+
+.link .usertext-body a[href$="#admin"] {
+    background-color: red;
+    color: white;
+    border-radius: 2px;
+    padding: 1px;
+}
+
+.link .usertext-body a[href$="#admin"]::after {
+    content:" [A]"
+}
+
+/*Linkflair*/
+.linkflairlabel,
+{
+    border-radius:0;
+    border: 1px solid;
+}
+
+.linkflair-bestof .linkflairlabel {
+    background-color: gold;
+    color: black;
+    border:gold;
+}
+
+.linkflair-ban .linkflairlabel {
+    background-color: transparent white;
+    color: black;
+    border-radius: 0;
+    font-weight: bold;
+    border: 1px solid red;
+}
+
+.linkflair-admin .linkflairlabel {
+    background-color: red;
+    color: white;
+    font-weight: bold;
+    border-radius: 2px;
+    border: 0;
+    padding-bottom: 1px;
+}
+
+.linkflair-automod .linkflairlabel {
+    background-color: green;
+    color: white;
+    font-weight: bold;
+    border-radius: 2px;
+    border: 0;
+    padding-bottom: 1px;
+}
+
+/* sidebar*/
+
+/* flair search button stylings*/
+
+.side a[href$="#admin"] {
+    background-color: red;
+    color: white;
+    border-radius: 2px;
+    font-weight: bold;
+}
+
+.side a[href$="#bans"] {
+    background-color: transparent white;
+    color: black;
+    border-radius: 0;
+    font-weight: bold;
+    border: 1px solid red;
+}
+
+.side a[href$="#automod"] {
+    background-color: green;
+    color: white;
+    border-radius: 2px;
+    font-weight: bold;
+}
+
+.side a[href$="#best"] {
+    background-color: gold;
+    color: black;
+    border:gold;
+}
