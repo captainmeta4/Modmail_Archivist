@@ -53,7 +53,7 @@ class Bot():
                     continue
 
                 #update the mappings
-                self.mappings[message.subreddit.display_name]=archive_subreddit.display_name
+                self.mappings[message.subreddit.display_name.lower()]=archive_subreddit.display_name.lower()
                 r.subreddit('captainmeta4bots').wiki['archivist'].edit(json.dumps(self.mappings))
                                
             else:
@@ -185,21 +185,21 @@ class Bot():
     def archive_modmail(self):
 
         #get subs currently using New Modmail
-        subs=list(r.subreddit('all').modmail.subreddits())
+        self.subs=list(x.display_name.lower() for x in r.subreddit('all').modmail.subreddits())
 
         #remove subs not found in mappings
-        for sub in subs:
+        for sub in self.subs:
             if sub not in self.mappings:
-                subs.remove(sub)
+                self.subs.remove(sub)
 
         #bulk read convos and archive
 
-        for conversation in r.subreddit('captainmeta4bots').modmail.bulk_read(other_subreddits=subs):
+        for conversation in r.subreddit('captainmeta4bots').modmail.bulk_read(other_subreddits=self.subs):
+
+            print('{} in /r/{}'.format(conversation.subject, conversation.owner.display_name))
 
             #mark read
             conversation.read()
-            particpant = conversation.participant
-            print('{} in /r/{}'.format(conversation.subject, conversation.owner.display_name))
 
             #check mapping and get subreddit
             if conversation.owner.display_name not in self.mappings:
@@ -228,14 +228,17 @@ class Bot():
         #spin invite monitor off as separate process
         invites = threading.Thread(target=self.invite_checker,name="invite monitor")
         invites.start()
+        print('invite monitor thread started')
 
         #spin off access list maintenance as separate process
         access = threading.Thread(target=self.access_lists, name="access maintenance")
         access.start()
+        print('access management thread started')
 
         #archive modmail
         while True:
             self.archive_modmail()
+            
 
 if __name__=="__main__":
     b=Bot()
