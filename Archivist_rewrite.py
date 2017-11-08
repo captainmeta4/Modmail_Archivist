@@ -183,7 +183,7 @@ class Bot():
             #mark read
             conversation.read()
             particpant = conversation.participant
-            print('{} by /u/{}'.format(conversation.subject, getattr(conversation.participant,"name","[none]")))
+            print('{} in /r/{}'.format(conversation.subject, conversation.owner.display_name))
 
             #check mapping and get subreddit
             if conversation.owner.display_name not in self.mappings:
