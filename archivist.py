@@ -13,7 +13,8 @@ SUBREDDIT_NAME="{}_mm"
 SUBREDDIT_TITLE="Modmail Archive for /r/{}"
 RESPONSE=("Thank you for using Modmail Archivist!. Your new real-time modmail archive can be found at /r/{}."+
           "\n\n^(Please direct questions or feedback to /u/captainmeta4)")
-
+FAIL_RESPONSE="Thank you for using Modmail Archivist! Unfortunately, I encountered an error while attempting to create an archive subreddit for you. /u/captainmeta4 has been notified and will create your archive subreddit as soon as he can."
+FAIL_NOTICE="Error encountered while attempting to create subreddit for /r/{}."
 
 
 class Bot():
@@ -47,7 +48,8 @@ class Bot():
                 try:
                     archive_subreddit=r.subreddit.create(name, title=title, link_type="self", subreddit_type="private")
                 except:
-                    r.redditor('captainmeta4').message('Error',"There was an error creating the archive for {}".format(message.subreddit.display_name))
+                    r.redditor('captainmeta4').message('Error',FAIL_NOTICE.format(message.subreddit.display_name))
+                    message.reply(FAIL_RESPONSE)
                     continue
 
                 #update the mappings
