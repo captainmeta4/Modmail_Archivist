@@ -1,0 +1,6 @@
+Filter by modmail type:
+
+* [Bans](https://www.reddit.com/r/{}/search?q=flair%3Aban&sort=new&restrict_sr=on&t=all#bans)
+* [Admins](https://www.reddit.com/r/{}/search?q=flair%3Aadmin&restrict_sr=on&sort=relevance&t=all#admin)
+* [AutoModerator]
+(https://www.reddit.com/r/{}/search?q=flair%3Aautomod&sort=new&restrict_sr=on&t=all#automod)

@@ -11,6 +11,8 @@ r=praw.Reddit('modmail')
 #strings
 SUBREDDIT_NAME="{}_mm"
 SUBREDDIT_TITLE="Modmail Archive for /r/{}"
+RESPONSE=("Thank you for using Modmail Archivist!. Your new real-time modmail archive can be found at /r/{}."+
+          "\n\n^(Please direct questions or feedback to /u/captainmeta4)")
 
 
 
@@ -39,19 +41,24 @@ class Bot():
             #check mapping to see if there's an existing archive sub
             if message.subreddit.display_name not in self.mappings:
                 #create archiving sub
-                name=SUBREDDIT_NAME.format(subreddit.display_name)
-                title=SUBREDDIT_TITLE.format(subreddit.display_name)
-                archive_subreddit=r.subreddit.create(name, title=title, link_type="self", subreddit_type="private")
+                name=SUBREDDIT_NAME.format(message.subreddit.display_name)
+                title=SUBREDDIT_TITLE.format(message.subreddit.display_name)
+
+                try:
+                    archive_subreddit=r.subreddit.create(name, title=title, link_type="self", subreddit_type="private")
+                except:
+                    r.redditor('captainmeta4').message('Error',"There was an error creating the archive for {}".format(message.subreddit.display_name))
+                    continue
 
                 #update the mappings
                 self.mappings[message.subreddit.display_name]=archive_subreddit.display_name
                 r.subreddit('captainmeta4bots').wiki['archivist'].edit(json.dumps(self.mappings))
                                
             else:
-                archive_subreddit=self.mappings[message.subreddit.display_name]
+                archive_subreddit=r.subreddit(self.mappings[message.subreddit.display_name])
 
 
-            #apply css
+            #apply css
             css=open('CSS.txt').read()
             archive_subreddit.stylesheet.update(css,"Apply css")
 
@@ -59,10 +66,17 @@ class Bot():
             automod=open('AutoModerator.txt').read()
             archive_subreddit.wiki['config/AutoModerator'].edit(automod, "Apply AutoMod Config")
 
+            #apply sidebar
+            sidebar=open('Sidebar.txt').read()
+            sidebar=sidebar.format(archive_subreddit.display_name,archive_subreddit.display_name,archive_subreddit.display_name)
+            archive_subreddit.wiki['config/sidebar'].edit(sidebar)
+
             #Add users
-            for mod in message.subreddit.moderator(limit=None):
+            for mod in message.subreddit.moderator():
                 if any(x in mod.mod_permissions for x in ['all','mail']):
                        archive_subreddit.contributor.add(mod)
+
+            message.reply(RESPONSE.format(archive_subreddit.display_name))
 
     def update_contributors(self):
 
