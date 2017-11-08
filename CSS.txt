@@ -69,6 +69,13 @@
     padding-bottom: 1px;
 }
 
+.linkflair-removed .linkflairlabel {
+    background-color: white;
+    color: black;
+    border: 1px
+    font-weight: bold
+    border-radius: 0px
+
 /* sidebar*/
 
 /* flair search button stylings*/

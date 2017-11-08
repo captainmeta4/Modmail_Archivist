@@ -1,0 +1,36 @@
+---
+#Unspam all posts
+    type: submission
+    author: [modmail_archivist]
+    action: approve
+
+---
+#Disallow posting
+    type: submission
+    ~author: [modmail_archivist]
+    action: remove
+    action_reason: "Unapproved submission"
+    comment: |
+        Your submission has been automatically removed from /r/{{subreddit}}.
+
+        Only the Modmail Archivist is allowed to create new posts.
+
+    set_flair: ["Removed","removed"]
+    
+---
+#ban flair
+    type: text submission
+    title: ["you've been banned","you've been temporarily banned"]
+    set_flair: ["Ban","ban"]
+
+---
+#admin flair
+    type: text submission
+    body (includes, regex): "#admin"
+    set_flair: ["Admin","admin"]
+
+---
+#Automod flair
+    type: text submission
+    body (includes): "AutoModerator#mod"
+    set_flair: ["AutoMod","automod"]
