@@ -16,6 +16,23 @@ RESPONSE=("Thank you for using Modmail Archivist!. Your new real-time modmail ar
 FAIL_RESPONSE="Thank you for using Modmail Archivist! Unfortunately, I encountered an error while attempting to create an archive subreddit for you. /u/captainmeta4 has been notified and will create your archive subreddit as soon as he can."
 FAIL_NOTICE="Error encountered while attempting to create subreddit for /r/{}."
 
+#create a wrapper to handle 503's
+def sleep_and_retry_on_error(function):
+
+    def wrapper(*args, **kwargs):
+        while True:
+
+            try:
+                print('starting function {}'.format(function.__name__))
+                function(*args, **kwargs)
+            except Exception as e:
+                print('crash in function {}: {}'.format(function.__name__,str(e)))
+                print('thread function {} has crashed. Sleeping 60s then restarting'.format(function.__name__))
+                time.sleep(60)
+
+    return wrapper
+            
+
 
 class Bot():
 
@@ -23,12 +40,18 @@ class Bot():
 
         self.mappings=json.loads(r.subreddit('captainmeta4bots').wiki['archivist'].content_md)
 
-    
 
+    
+    @sleep_and_retry_on_error
     def invite_checker(self):
         
         #constant check for new mod invites
-        for message in r.inbox.stream():
+        for message in r.inbox.stream(pause_after=1):
+
+            if message is None:
+                #no new messages
+                time.sleep(60)
+                continue
 
             message.mark_read()
 
@@ -80,6 +103,7 @@ class Bot():
 
             message.reply(RESPONSE.format(archive_subreddit.display_name))
 
+ 
     def update_contributors(self):
 
         #checks archive subreddits and cleans out contributors based on mod perms in corresponding subreddits
@@ -120,11 +144,15 @@ class Bot():
                     archive.contributor.add(name)
                     print('added {} to {}'.format(name, archive.display_name))
 
+ 
+    @sleep_and_retry_on_error
     def access_lists(self):
 
         #process for keeping subreddit access lists up to date
         while True:
+            print('Time to check for changes to subreddit contributors')
             self.update_contributors()
+            print('Contributor check complete. Thread sleeping for 1hr.')
             time.sleep(3600)
                     
             
@@ -181,45 +209,43 @@ class Bot():
 
         return output
 
-
+    @sleep_and_retry_on_error
     def archive_modmail(self):
 
-        #get subs currently using New Modmail
-        self.subs=list(x.display_name.lower() for x in r.subreddit('all').modmail.subreddits())
+        while True:
 
-        #remove subs not found in mappings
-        for sub in self.subs:
-            if sub not in self.mappings:
-                self.subs.remove(sub)
+            #get subs currently using New Modmail
+            self.subs=list(x.display_name.lower() for x in r.subreddit('all').modmail.subreddits())
 
-        #bulk read convos and archive
 
-        for conversation in r.subreddit('captainmeta4bots').modmail.bulk_read(other_subreddits=self.subs):
+            #bulk read convos and archive
 
-            print('{} in /r/{}'.format(conversation.subject, conversation.owner.display_name))
+            for conversation in r.subreddit('captainmeta4bots').modmail.bulk_read(other_subreddits=self.subs):
 
-            #mark read
-            conversation.read()
+                print('{} in /r/{}'.format(conversation.subject, conversation.owner.display_name))
 
-            #check mapping and get subreddit
-            if conversation.owner.display_name not in self.mappings:
-                continue
-            archive_subreddit=r.subreddit(self.mappings[conversation.owner.display_name])
+                #mark read
+                conversation.read()
 
-            #generate archive text and title
-            text=self.conversation_string(conversation)
-            title=conversation.subject
+                #check mapping and get subreddit
+                if conversation.owner.display_name.lower() not in self.mappings:
+                    continue
+                archive_subreddit=r.subreddit(self.mappings[conversation.owner.display_name.lower()])
 
-            #search subreddit for id
-            query="selftext:{}".format(conversation.id)
-            for submission in archive_subreddit.search(query):
-                if submission.selftext.startswith(self.conversation_url(conversation)):
-                    submission.edit(text)
-                    break
-            else:
-                #here we know (or at least think) no submission exists
-                #we need to create one
-                archive_subreddit.submit(title, selftext=text)
+                #generate archive text and title
+                text=self.conversation_string(conversation)
+                title=conversation.subject
+
+                #search subreddit for id
+                query="selftext:{}".format(conversation.id)
+                for submission in archive_subreddit.search(query):
+                    if submission.selftext.startswith(self.conversation_url(conversation)):
+                        submission.edit(text)
+                        break
+                else:
+                    #here we know (or at least think) no submission exists
+                    #we need to create one
+                    archive_subreddit.submit(title, selftext=text)
 
         
 
@@ -228,16 +254,14 @@ class Bot():
         #spin invite monitor off as separate process
         invites = threading.Thread(target=self.invite_checker,name="invite monitor")
         invites.start()
-        print('invite monitor thread started')
 
         #spin off access list maintenance as separate process
         access = threading.Thread(target=self.access_lists, name="access maintenance")
         access.start()
-        print('access management thread started')
 
         #archive modmail
-        while True:
-            self.archive_modmail()
+        archive = threading.Thread(target=self.archive_modmail, name="archive")
+        archive.start()
             
 
 if __name__=="__main__":
